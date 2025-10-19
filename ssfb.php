@@ -24,10 +24,21 @@ $items = array_diff(scandir($path), ['.','..']);
 if (isset($_GET['view'])) {
   $f = realpath($_GET['view']);
   if ($f && strpos($f, $root) === 0 && is_file($f)) {
-    header('Content-Type:text/plain;charset=utf-8');
+
+    // If ?view=download, send as attachment
+    if (isset($_GET['download'])) {
+      header('Content-Type: text/plain');
+      header('Content-Disposition: attachment; filename="'.basename($f).'"');
+      readfile($f);
+      exit;
+    }
+
+    // Normal inline view
+    header('Content-Type: text/plain; charset=utf-8');
     echo htmlspecialchars(file_get_contents($f));
     exit;
   }
+
   http_response_code(404);
   echo "File not found.";
   exit;
@@ -187,9 +198,9 @@ display:none;align-items:center;justify-content:center;opacity:0;transition:opac
 <table id="fileTable">
   <thead>
     <tr>
-      <th class="sortable" data-sort="name"><span class="label">Name</span><span class="arrow" aria-hidden="true"></span></th>
-      <th class="sortable size" data-sort="size"><span class="label">Size</span><span class="arrow" aria-hidden="true"></span></th>
-      <th class="sortable date" data-sort="date"><span class="label">Modified</span><span class="arrow" aria-hidden="true"></span></th>
+      <th class="sortable" data-sort="name"><span class="label">Name</span><span class="arrow"></span></th>
+      <th class="sortable size" data-sort="size"><span class="label">Size</span><span class="arrow"></span></th>
+      <th class="sortable date" data-sort="date"><span class="label">Modified</span><span class="arrow"></span></th>
     </tr>
   </thead>
   <tbody id="fileTbody">
@@ -281,65 +292,127 @@ document.querySelectorAll('.img-link').forEach(link=>{
 });
 
 /* ---------------- Text modal ---------------- */
-const textModal=document.getElementById('textModal'),textContent=document.getElementById('modalContent'),
-textCopy=document.getElementById('modalCopy'),textClose=document.getElementById('modalClose');
+const textModal=document.getElementById('textModal'),
+      textContent=document.getElementById('modalContent'),
+      textCopy=document.getElementById('modalCopy'),
+      textClose=document.getElementById('modalClose');
 document.querySelectorAll('.text-link').forEach(l=>{
   l.addEventListener('click',e=>{
     e.preventDefault();
     document.querySelectorAll('.text-link').forEach(el=>el.removeAttribute('data-active'));
     l.setAttribute('data-active','true');
     fetch(l.dataset.file).then(r=>r.text()).then(t=>{
-      textContent.textContent=t;textModal.style.display='flex';requestAnimationFrame(()=>textModal.classList.add('show'));
-    }).catch(()=>{textContent.textContent='Failed to open file.';textModal.style.display='flex';requestAnimationFrame(()=>textModal.classList.add('show'));});
+      textContent.textContent=t;
+      textModal.style.display='flex';
+      requestAnimationFrame(()=>textModal.classList.add('show'));
+    }).catch(()=>{
+      textContent.textContent='Failed to open file.';
+      textModal.style.display='flex';
+      requestAnimationFrame(()=>textModal.classList.add('show'));
+    });
   });
 });
 textClose.onclick=()=>{textModal.classList.remove('show');setTimeout(()=>textModal.style.display='none',350);};
 textCopy.onclick=()=>{navigator.clipboard.writeText(textContent.textContent).then(()=>{
-  textCopy.innerHTML='<i class="fa-solid fa-check"></i> Copied!';setTimeout(()=>textCopy.innerHTML='<i class="fa-regular fa-copy"></i> Copy text',1500);
+  textCopy.innerHTML='<i class="fa-solid fa-check"></i> Copied!';
+  setTimeout(()=>textCopy.innerHTML='<i class="fa-regular fa-copy"></i> Copy text',1500);
 });};
 
-// Download buttons
+/* ---------------- Download buttons ---------------- */
 const textDownload=document.getElementById('modalDownloadText');
-if(textDownload){textDownload.onclick=()=>{const current=document.querySelector('.text-link[data-active="true"]');if(current){const a=document.createElement('a');a.href=current.dataset.file.replace('?view=','');a.download='';a.click();}};}
+if(textDownload){
+  textDownload.onclick=()=>{
+    const current=document.querySelector('.text-link[data-active="true"]');
+    if(current){
+      const a=document.createElement('a');
+      a.href=current.dataset.file+'&download=1';
+      a.click();
+    }
+  };
+}
+
 const imgDownload=document.getElementById('imgDownload');
-if(imgDownload){imgDownload.onclick=()=>{if(!imgCopy.dataset.url)return;const a=document.createElement('a');a.href=imgCopy.dataset.url;a.download='';a.click();};}
+if(imgDownload){
+  imgDownload.onclick=()=>{
+    if(!imgCopy.dataset.url)return;
+    const a=document.createElement('a');
+    a.href=imgCopy.dataset.url;
+    a.download='';
+    a.click();
+  };
+}
 
 /* ---------------- Image modal ---------------- */
-const imgModal=document.getElementById('imgModal'),imgFull=document.getElementById('imgFull'),
-imgClose=document.getElementById('imgClose'),imgCopy=document.getElementById('imgCopy'),
-imgPrev=document.getElementById('imgPrev'),imgNext=document.getElementById('imgNext');
-const imgLinks=Array.from(document.querySelectorAll('.img-link'));let currentIndex=-1;
+const imgModal=document.getElementById('imgModal'),
+      imgFull=document.getElementById('imgFull'),
+      imgClose=document.getElementById('imgClose'),
+      imgCopy=document.getElementById('imgCopy'),
+      imgPrev=document.getElementById('imgPrev'),
+      imgNext=document.getElementById('imgNext');
+const imgLinks=Array.from(document.querySelectorAll('.img-link'));
+let currentIndex=-1;
 function resolveAbsoluteUrl(url){try{return new URL(url,window.location.href).href;}catch(e){return url;}}
-function showImageAt(i){if(imgLinks.length===0)return;currentIndex=(i+imgLinks.length)%imgLinks.length;
-const url=imgLinks[currentIndex].dataset.img;imgFull.src=url;imgCopy.dataset.url=url;
-new Image().src=imgLinks[(currentIndex+1)%imgLinks.length].dataset.img;new Image().src=imgLinks[(currentIndex-1+imgLinks.length)%imgLinks.length].dataset.img;
-if(imgModal.style.display!=='flex'){imgModal.style.display='flex';requestAnimationFrame(()=>imgModal.classList.add('show'));}}
+function showImageAt(i){
+  if(imgLinks.length===0)return;
+  currentIndex=(i+imgLinks.length)%imgLinks.length;
+  const url=imgLinks[currentIndex].dataset.img;
+  imgFull.src=url;
+  imgCopy.dataset.url=url;
+  new Image().src=imgLinks[(currentIndex+1)%imgLinks.length].dataset.img;
+  new Image().src=imgLinks[(currentIndex-1+imgLinks.length)%imgLinks.length].dataset.img;
+  if(imgModal.style.display!=='flex'){
+    imgModal.style.display='flex';
+    requestAnimationFrame(()=>imgModal.classList.add('show'));
+  }
+}
 imgLinks.forEach((l,i)=>{l.dataset.index=i;l.addEventListener('click',e=>{e.preventDefault();showImageAt(i);});});
 imgPrev.onclick=e=>{e.stopPropagation();showImageAt(currentIndex-1);};
 imgNext.onclick=e=>{e.stopPropagation();showImageAt(currentIndex+1);};
 imgClose.onclick=()=>{imgModal.classList.remove('show');setTimeout(()=>imgModal.style.display='none',350);};
 imgCopy.onclick=()=>{const abs=resolveAbsoluteUrl(imgCopy.dataset.url||'');navigator.clipboard.writeText(abs).then(()=>{
-  imgCopy.innerHTML='<i class="fa-solid fa-check"></i> Copied!';setTimeout(()=>imgCopy.innerHTML='<i class="fa-regular fa-copy"></i> Copy image URL',1500);
+  imgCopy.innerHTML='<i class="fa-solid fa-check"></i> Copied!';
+  setTimeout(()=>imgCopy.innerHTML='<i class="fa-regular fa-copy"></i> Copy image URL',1500);
 });};
-window.addEventListener('keydown',e=>{const open=document.querySelector('.modal.show');if(!open)return;
-if(e.key==='Escape')document.querySelectorAll('.modal.show').forEach(m=>{m.classList.remove('show');setTimeout(()=>m.style.display='none',350);});
-else if(open===imgModal){if(e.key==='ArrowLeft')showImageAt(currentIndex-1);if(e.key==='ArrowRight')showImageAt(currentIndex+1);}});
-[imgModal,textModal].forEach(m=>{m.addEventListener('click',e=>{const c=m.querySelector('.modal-content');
-if(!c.contains(e.target)&&!e.target.closest('.img-nav')&&!e.target.classList.contains('modal-copy')&&!e.target.classList.contains('modal-close')){
-m.classList.remove('show');setTimeout(()=>m.style.display='none',350);}});});
 
 /* ---------------- Sorting ---------------- */
-const tbody=document.getElementById('fileTbody'),rows=Array.from(tbody.querySelectorAll('tr.row-item'));
-const state={key:'name',dir:'asc'};const heads=Array.from(document.querySelectorAll('th.sortable'));
+const tbody=document.getElementById('fileTbody'),
+      rows=Array.from(tbody.querySelectorAll('tr.row-item')),
+      state={key:'name',dir:'asc'},
+      heads=Array.from(document.querySelectorAll('th.sortable'));
 function compare(a,b,dir){if(a<b)return dir==='asc'?-1:1;if(a>b)return dir==='asc'?1:-1;return 0;}
-function sortRows(k,d){const folders=[],files=[];rows.forEach(tr=>(tr.dataset.type==='dir'?folders:files).push(tr));
-const getVal=tr=>k==='name'?tr.dataset.name:k==='size'?+tr.dataset.size:k==='date'?+tr.dataset.date:tr.dataset.name;
-folders.sort((a,b)=>compare(getVal(a),getVal(b),d));files.sort((a,b)=>compare(getVal(a),getVal(b),d));
-const frag=document.createDocumentFragment();[...folders,...files].forEach(tr=>frag.appendChild(tr));tbody.appendChild(frag);}
-function updateArrows(){heads.forEach(th=>{const a=th.querySelector('.arrow');a.textContent='';th.classList.remove('active');});
-const active=heads.find(h=>h.dataset.sort===state.key);if(active){active.classList.add('active');active.querySelector('.arrow').textContent=state.dir==='asc'?'▲':'▼';}}
-heads.forEach(th=>{th.addEventListener('click',()=>{const k=th.dataset.sort;state.dir=(state.key===k)?(state.dir==='asc'?'desc':'asc'):'asc';state.key=k;sortRows(state.key,state.dir);updateArrows();});});
-sortRows(state.key,state.dir);updateArrows();
+function sortRows(k,d){
+  const folders=[],files=[];
+  rows.forEach(tr=>(tr.dataset.type==='dir'?folders:files).push(tr));
+  const getVal=tr=>k==='name'?tr.dataset.name:k==='size'?+tr.dataset.size:k==='date'?+tr.dataset.date:tr.dataset.name;
+  folders.sort((a,b)=>compare(getVal(a),getVal(b),d));
+  files.sort((a,b)=>compare(getVal(a),getVal(b),d));
+  const frag=document.createDocumentFragment();
+  [...folders,...files].forEach(tr=>frag.appendChild(tr));
+  tbody.appendChild(frag);
+}
+function updateArrows(){
+  heads.forEach(th=>{
+    const a=th.querySelector('.arrow');
+    a.textContent='';
+    th.classList.remove('active');
+  });
+  const active=heads.find(h=>h.dataset.sort===state.key);
+  if(active){
+    active.classList.add('active');
+    active.querySelector('.arrow').textContent=state.dir==='asc'?'▲':'▼';
+  }
+}
+heads.forEach(th=>{
+  th.addEventListener('click',()=>{
+    const k=th.dataset.sort;
+    state.dir=(state.key===k)?(state.dir==='asc'?'desc':'asc'):'asc';
+    state.key=k;
+    sortRows(state.key,state.dir);
+    updateArrows();
+  });
+});
+sortRows(state.key,state.dir);
+updateArrows();
 </script>
 </body>
 </html>
