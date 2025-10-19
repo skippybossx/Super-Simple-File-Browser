@@ -51,6 +51,19 @@ A minimalist, read-only PHP file browser with Dark Nord theme, smooth modals, an
 2. Open the directory in your browser, e.g.:  http://localhost
 3. Done 🎉 — the browser works instantly.
 
+---
+
+## Docker Compose
+
+```bash
+Install docker: bash <(curl https://get.docker.com)
+```
+```bash
+wget https://raw.githubusercontent.com/skippybossx/Super-Simple-File-Browser/refs/heads/main/docker-compose.yml
+```
+```bash
+docker compose up -d
+```
 
 ---
 
