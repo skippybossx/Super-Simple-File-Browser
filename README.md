@@ -33,7 +33,7 @@ A minimalist, read-only PHP file browser with Dark Nord theme, smooth modals, an
 ## 🖼️ Screenshot
 
 ![preview](https://raw.githubusercontent.com/skippybossx/Super-Simple-File-Browser/refs/heads/main/Super-Simple-File-Browser.png)  
-*(Replace this with your own screenshot once uploaded to GitHub.)*
+
 
 ---
 
