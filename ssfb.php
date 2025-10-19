@@ -210,7 +210,7 @@ if ($path !== $root) {
   echo '<tr class="static-parent"><td colspan="3"><a class="folder" href="?dir=' . urlencode($p) . '"><i class="fa-solid fa-arrow-up"></i> [Parent Directory]</a></td></tr>';
 }
 
-$textT = ['txt','log','cfg','ini','json','yml','yaml','md','xml','html','css','js'];
+$textT = ['txt','log','cfg','ini','json','yml','yaml','md','xml','html','css','js','conf','config'];
 $imgT  = ['jpg','jpeg','png','gif','webp','bmp'];
 $skipFiles = ['index.php','ftp.php','ssfb.php'];
 
