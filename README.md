@@ -47,8 +47,8 @@ A minimalist, read-only PHP file browser with Dark Nord theme, smooth modals, an
 
 ## 📦 Installation
 
-1. Copy `ssfb.php` to any directory on your web server.  
-2. Open the directory in your browser, e.g.:  http://localhost
+1. Copy `ssfb.php` to any directory on your web server. (change name to index.php if web server not configured to accept ssfb.php files)  
+2. Open the directory in your browser, e.g.:  http://localhost/ or http://localhost/directorywithfile/
 3. Done 🎉 — the browser works instantly.
 
 ---
@@ -64,6 +64,8 @@ wget https://raw.githubusercontent.com/skippybossx/Super-Simple-File-Browser/ref
 ```bash
 docker compose up -d
 ```
+
+Open the directory in your browser, e.g.:  http://ipofyourserver/
 
 ---
 
