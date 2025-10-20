@@ -39,7 +39,7 @@ A minimalist, read-only PHP file browser with Dark Nord theme, smooth modals, an
 
 ## ⚙️ Requirements
 
-- PHP **7.4+** (works with PHP 8.x and 8.3)  
+- PHP **7.4+** (works with PHP 8.x)  
 - Read access to the filesystem  
 - No external libraries required  
 
